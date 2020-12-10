@@ -1,15 +1,25 @@
-# 高性能异步WEB引擎使用说明（Toby 版权所有 Copyright@Toby）
-### High Performance Asynchronous (HPA) Web Engine v2.0
+# 高性能异步WEB引擎使用说明
+### High Performance Asynchronous (HPA) Web Engine v2.2
 ***********************************************************
 
 #### HPA特性
+- 包管理
+    - 采用poetry，使用步骤
+    1. pip install poetry
+    2. poetry install
+    3. poetry shell
+        进入了virtualenv的环境，可以运行了:python main.py
+        exit退出virtualenv环境
+    4. 安装某个库的方式
+        poetry add xxx库
+        这个会自动安装并加入pyproject.toml文件
 
 - 基础支持
     - 基础系统环境
         - Ubuntu 16.04
-        - Python 3.7.0
-        - Tornado 5.1+ *(未来支持6.0)*
-        - Postgresql 10.0
+        - Python 3.8+
+        - Tornado 6.1+
+        - Postgresql 11.0
     - 基础依赖库
         - Postgresql使用库：[asyncpg](https://github.com/MagicStack/asyncpg)
         - Mysql：[aiomysql](https://github.com/aio-libs/aiomysql)
@@ -36,9 +46,11 @@
 
 
 - 开发环境
-    - VMware-workstation-full-14.1.2-8497320
-    - 为了和老版本兼容，内网地址为：192.168.22.200， 老版本为192.168.22.100
-
+    ~~- VMware-workstation-full-14.1.2-8497320~~
+    ~~- 为了和老版本兼容，内网地址为：192.168.22.200， 老版本为192.168.22.100~~
+    
+- pipenv install安装即可
+    
 - 使用要求
     - 所有输出使用loggin系统，日志文件存放在log目录下，按日期命名
     - 使用方式如下：
@@ -51,8 +63,9 @@
             logging.critical('王承明critical message')
         ```
     - 缺省是系统所有信息输出到控制台，Error，Critical级别的输入出到日志文件
-        >例如500的挂起错误，会输出到控制台和日志文件中    
-
+        
+    >例如500的挂起错误，会输出到控制台和日志文件中    
+    
 - 异步新语法介绍    
     - 使用async+await语法后不用tornado.gen.Return，直接用return
     - 例如
@@ -86,7 +99,7 @@
     - 不加async前缀的函数无法调用加了async前缀的函数 *（同步函数无法调用异步函数）*
     - 使用await调用加了async前缀的函数为异步调用，异步函数要调用同步函数需要使用 **同步转异步**
     - 同步转异步调用方式
-        
+      
         **老方式**
         - class顶部需要写executor = ThreadPoolExecutor(64)
         - 同步函数需要加@run_on_executor的帽子才能通过yield调用
@@ -125,8 +138,7 @@
 
 - Postgresql操作的新语法介绍
     - 参数传递变化，主要变化是从%s变量占位符变成了$1、$2、$3 .... $n
-    - $n为站位符，n为后面参数位置，1就是第一个位置，以此类推，那么如果两个地方都使用1参数，那么两个地方都可以写作$1
-        
+      
         **老方法例子**
 
         ```python
@@ -146,8 +158,9 @@
             - dict或者list不用json.dump后再做参数插入，直接当做参数传入即可
             - 查询出来的结果集中也直接是dict或者list，不用再做json.loads动作
         - 其他一些Postgresql和Python对应的类型见下面的链接
-            >[Postgresql对应Python类型](https://magicstack.github.io/asyncpg/current/usage.html?highlight=json)
             
+            >[Postgresql对应Python类型](https://magicstack.github.io/asyncpg/current/usage.html?highlight=json)
+        
     - 插入指定时间格式的方法（Postgresql和Mysql都使用这种方式）
         - 老的库直接插入时间字符串类似这样2017-07-07 12:23:32
         - 新的库需要使用datetime型作为参数传入
@@ -155,8 +168,8 @@
             ```python
             need_time = utils.StrToDateTime('2017-07-07 12:32:23')
             ```
-        
-
+    
+    
 - MySql操作方式
     - 所有操作和Postgresql封装一致，同样的执行方式和结果获取
     - 和Postgresql操作不同的是
@@ -219,22 +232,21 @@
     
     > 本功能可以过滤掉html内容str中的不合法的字符，保留合法的html
     
-
 - 引擎中一些使用方法
     - 引用当前目录下的模块的方式
-        
+      
         **老的方式**
 
         ```python
         from utils import xxx
         ```
-         
+        
         **新的方式**
-         
+        
         ```python
         from .utils import xxx
         ```
-         
+        
     - 单进程用异步执行方式 *（service微服务）*
     
         ```python
@@ -286,7 +298,7 @@ _____________________________________________________________________
             ```
         
         - 私钥数字签名，公钥验证功能
-             
+          
             - 使用私钥对数据签名，返回签名后的base64字符串，密钥密码可选填
             > sign(self, data, prikey='', password=None)
             RSA签名,参数prikey私钥，可以通过generate_keys生产私钥，签名时需要传入私钥
@@ -296,7 +308,7 @@ _____________________________________________________________________
                 s = rsa.sign(a, pri, '123kkk')
                 print (s)
                 ```
-             
+            
             - 使用公钥验证数据签名，返回True or False，密钥密码可选填
             > verify(self, data, signature, pubkey='', password=None)
             RSA验签参数pubkey，可以通过generate_keys生产公钥，前ing是需要传入公钥用于验证签名
@@ -316,7 +328,7 @@ _____________________________________________________________________
                 e = rsa.encrypt(a, pub, '123kkk')
                 print (e)
                 ```
-             
+            
             - 使用私钥对数据解密，密钥密码可选填
                 > decrypt(self, encrypt_data, prikey='', password=None) 公钥加密，传入私钥进行解密,返回解密后的原文
                 
@@ -385,54 +397,69 @@ _____________________________________________________________________
     
     detext为Python解密后的字符串
     
-    
 - WordCheck输入字符串校验功能
    	- 常用的字符串检查类，检查各种字符串是否符合所需格式要求，使用正则工具
-   	- 目前有如下检测功能，可根据需要自行按照模块的编写模式添加
+      	
+       	- 目前有如下检测功能，可根据需要自行按照模块的编写模式添加
     - CheckEmail(text)
-        > 检查email格式是否符合要求,返回True表示正常，False表示有非法字符
-
+    
+    > 检查email格式是否符合要求,返回True表示正常，False表示有非法字符
+        
     -  CheckFileMD5(text)
-        > 检查是否MD5格式字符串，32位16进制
-    
+        
+    > 检查是否MD5格式字符串，32位16进制
+        
     - CheckFilePath(text)
-        > 检查文件路径
-    
+        
+    > 检查文件路径
+        
     - CheckFileUUID(text)
+        
         > 检查文件uuid格式是否符合要求
         
     - CheckNubmer(text)
-        > 检查字符串是否数字
-    
+        
+    > 检查字符串是否数字
+        
     - CheckOverseaTelphone(text)
+        
         > 检查海外手机号是否符合要求,返回True表示正常，False表示有非法字符
         
     - CheckSearchBar(text)
+        
         > 检查搜索框类的输入是否有sql注入字符串，返回True表示正常，False表示有非法字符
     - CheckTelphone(text)
+        
         > 检查国内手机号是否符合要求,返回True表示正常，False表示有非法字符
         
     - CheckUUID(text)
+        
         > 检查uuid格式是否符合要求
         
     - CheckUsername(text)
-        > 检查用户名是否符合要求, 返回True表示正常，False表示有非法字符
-    
+        
+    > 检查用户名是否符合要求, 返回True表示正常，False表示有非法字符
+        
     - CleanUrl(text)
-        > 清洗URl，如果出现http://这种，就去掉，没有就不管,只保留网址部分
+        
+    > 清洗URl，如果出现http://这种，就去掉，没有就不管,只保留网址部分
     
-    - GetAddress(text)
-        > 获取地址，省市这种，如果没有返回其他地区
-    
-    - GetDateStr(text)
-        > 获取日期部分字符串
-    
-    - WashEmail(text)
-        > 清洗Email ，错误会返回None
-    
-    - WashSQLParmas(parm)
-        > 清洗sql参数，如果有不合格的参数，直接清洗为'',主要用于搜索框中输入的字符检查是否有sql注入等
- 
+   	- GetAddress(text)
+   	    
+   	> 获取地址，省市这种，如果没有返回其他地区
+   	    
+   	- GetDateStr(text)
+   	    
+   	> 获取日期部分字符串
+   	    
+   	- WashEmail(text)
+   	    
+   	> 清洗Email ，错误会返回None
+   	    
+   	- WashSQLParmas(parm)
+   	    
+   	    > 清洗sql参数，如果有不合格的参数，直接清洗为'',主要用于搜索框中输入的字符检查是否有sql注入等
+   	
 - switch放置switch case语法编写多逻辑功能
     - Python本身没有switch case语法，因此方便多逻辑编写，写了一个这个方法，具体使用方式参考下面代码
     
@@ -453,11 +480,13 @@ _____________________________________________________________________
     ```
 
 - CreateGUID(prefix=None, guidlen=29, withpunctuation=False, islower=False)
-    > 产生一个HPA标准的UUID字符串
-
+    
+> 产生一个HPA标准的UUID字符串
+    
 - CreateOPENAPI(prefix=None, guidlen=11, withpunctuation=False)
-    > 产生一个open user使用的app_id和app_secret
-
+    
+> 产生一个open user使用的app_id和app_secret
+    
 - DateTimeToFriendly(target_time: datetime.datetime) -> str
     > 显示传入时间的友好信息，例如：几分钟前，几小时前，几天前，几分钟后，几天后，几个月后
     :param target_time: 目标时间，会用它和当前时间比较厚格式化输出
@@ -468,23 +497,29 @@ _____________________________________________________________________
     并返回字符串
 
 - DateTimeToTimeStamp(dbdatetime)
-    > datetime类型转换为时间戳
-
+    
+> datetime类型转换为时间戳
+    
 - DeepEncrypPassword(username, orgpassword, datetimestr)
-    > 通过加入用户名，时间戳作为参数进行的加密运算，避免库里直接复制密码就可以生效的漏洞
-
+    
+> 通过加入用户名，时间戳作为参数进行的加密运算，避免库里直接复制密码就可以生效的漏洞
+    
 - FixedEmailAddress(email_str)
-    > 对email地址整形，中间有空格的，前后有空格的都去掉，让发送邮件有点鲁棒性
-
+    
+> 对email地址整形，中间有空格的，前后有空格的都去掉，让发送邮件有点鲁棒性
+    
 - FixedEmailList(email_str)
-    > 处理多个email组成的字符串，把分隔符号替换为标准的 ";"
-
+    
+> 处理多个email组成的字符串，把分隔符号替换为标准的 ";"
+    
 - GenerateRandCode(length=6)
-    > 随机产生一个手机校验码字符串，6位全数字
-
+    
+> 随机产生一个手机校验码字符串，6位全数字
+    
 - GenerateRandomIntNum(min, max)
-    > 产生一个整数范围内的随机数字
-
+    
+> 产生一个整数范围内的随机数字
+    
 - GenerateRandomString(length, withpunctuation=True, withdigit=True)
     > 产生一个随机字符串
     参数：withpunctuation是否带标点符号,withdigit是否带数字
@@ -503,17 +538,21 @@ _____________________________________________________________________
     格式为：YYYY-MM-DD HH:MM:SS
 
 - GetFileMD5(fdfile)
-    > 获取文件的MD5码,:param fdfile: 文件open后的fd，外部自行close(),返回统一为大写
-
+    
+> 获取文件的MD5码,:param fdfile: 文件open后的fd，外部自行close(),返回统一为大写
+    
 - GetFlowNumber(number)
-    > 生成流水号:201808150000001,:param number: int 业务ID,:return: str 流水号
-
+    
+> 生成流水号:201808150000001,:param number: int 业务ID,:return: str 流水号
+    
 - GetMD5(orgstr, islower=False)
-    > 获取一个字符串的MD5,返回统一为大写,可以通过islower
-
+    
+> 获取一个字符串的MD5,返回统一为大写,可以通过islower
+    
 - GetRealStr(sorb_str)
-    > for python3,无论是str类型还是bytes（前缀b）类型，用这个函数都返回一个str类型，稳稳的幸福
-
+    
+> for python3,无论是str类型还是bytes（前缀b）类型，用这个函数都返回一个str类型，稳稳的幸福
+    
 - GetSecondByUnit(unit)
     > 根据单位得到这个单位的时间长度（秒单位）
     
@@ -524,11 +563,13 @@ _____________________________________________________________________
         - 'year':31104000
 
 - GetStrCoding(rawstr)
-    > 判断某个字符串的编码类型，如果有中文和英文比较精确，如果只有英文就无法判断
-
+    
+> 判断某个字符串的编码类型，如果有中文和英文比较精确，如果只有英文就无法判断
+    
 - PrintSqlStr(sqlstr, parm, ctype='pg', log_level='info')
-    > 打印代码中的数据库语句为可执行的样子，方便调试
-
+    
+> 打印代码中的数据库语句为可执行的样子，方便调试
+    
 - StrSplit(str, width)
     > 按长度分隔字符串，支持汉字
     
@@ -537,8 +578,9 @@ _____________________________________________________________________
     - :return: 分隔后的list
 
 - StrToDateTime(datetimestr)
-    > 转换字符串为datetime类型，字符串支持类似2018/8/15这种格式
-
+    
+> 转换字符串为datetime类型，字符串支持类似2018/8/15这种格式
+    
 - TestExeTime(func)
     > 计算运行时间的帽子
 
@@ -550,12 +592,15 @@ _____________________________________________________________________
     ```
     
 - TimeStampToDateTime(timestamp, convert_to_local=True)
-    > 时间戳转换成datetime,convert_to_local: 是否转化为本地时间
-
+    
+> 时间戳转换成datetime,convert_to_local: 是否转化为本地时间
+    
 - isFloatEqual(f1, f2)
-    > 判断两个浮点数是否相等，精度为 0.000001,两个float的差小于这个误差的都认为相等
-
+    
+> 判断两个浮点数是否相等，精度为 0.000001,两个float的差小于这个误差的都认为相等
+    
 - Hbase64_encode(raw_str):
+    
     > HPA统一封装的url安全的base64编码函数,返回str类型的base64编码
     
 - Hbase64_decode(hbase64_str, need_byte=False):
@@ -566,8 +611,9 @@ _____________________________________________________________________
     - 支持不转换的标准base64字符串的解密 *(不做+转换为-,/转换为_)*
     
 - handler中获取参数使用：```get_argument_safe('name','default_value')```
-    > 做了sql注入等参数清洗动作 
-
+    
+> 做了sql注入等参数清洗动作 
+    
 - TransToPDF(htmstr, filename)
     > 转换html字符串为pdf文件，一般用于简历下载pdf
     
@@ -620,7 +666,6 @@ _____________________________________________________________________
     ```
     批量获取消息，最佳实践参考demo1_mq.py（微服务模式）
     
-
 - TopicModel（订阅模式）
     1. 阿里云上创建一个订阅主题（topic）
     2. 在队列管理中为每个消费者创建一个“消费者队列”
@@ -636,3 +681,309 @@ _____________________________________________________________________
     ```
     6. 消费者处通过正常的QueueModel自己“消费者队列”的方式获取消息体
     7. 这里没有做完的是，topic方式的消息还是原始的json格式，需要在从queue中取出来后使用的时候根据需要自行提取内容
+
+
+#### Testhandler，所有的功能演示代码块
+    ```python
+
+class TestHandler(ctrl_base.BaseHandler, xMinaSessionMixin):
+    async def get(self):
+        logging.debug('王承明debug message')
+        logging.info('王承明info message')
+        logging.warning('王承明warning message')
+        logging.error('王承明error message')
+        logging.critical('王承明critical message')
+
+        #查询
+        # sql = """show time zone;"""
+        # rv = await self.QuerySafe(sql)
+        # print (rv)
+        #
+        # # sql = """SELECT * FROM "upload";"""
+        # sql = """SET TIME ZONE PRC;"""
+        # await self.ExecSafe(sql)
+        # print ('ssssssssssssssssss')
+        #
+        # sql = """show time zone;"""
+        # rv = await self.QuerySafe(sql)
+        # print (rv)
+    
+        #--时间插入测试
+        # timestr = '2017-07-07 12:32:23'
+        # _intime = utils.StrToDateTime(timestr)
+        #
+        # sql ="""INSERT INTO "testtime"("t1", "t2", "t3")
+        #         VALUES ($1, $2, now()); """
+        # rv = await self.ExecSafe(sql,_intime,_intime)
+        #
+        #
+        # WHERE IN 用法
+        # co = ['南开大学','中国人民大学']
+        ##要做一个类似这样的查询sql = """SELECT * FROM opt_school WHERE "name" IN ('南开大学','中国人民大学');"""
+        #使用这种方式传入参数
+        # sql = """SELECT * FROM opt_school WHERE "name" = ANY($1);"""
+        # rv = await self.QuerySafe(sql, co)
+        # for row in rv:
+        #     print(row)
+    
+        # %xxx%模糊查询参数用法
+        # co = '%%大学%%'
+        # #要做一个类似这样的查询sql = """SELECT * FROM opt_school WHERE "name" LIKE '%技大学%';"""
+        # #使用这种方式传入参数
+        # sql = """SELECT * FROM opt_school WHERE "name" LIKE $1;"""
+        # rv = await self.QuerySafe(sql, co)
+        # for row in rv:
+        #     print(row)
+    
+        #timestamptz类型转换本地时区
+        # t2
+        #from pytz import timezone
+        # tzchina = timezone('Asia/Chongqing')
+        # a = t.replace(tzinfo=timezone('UTC')).astimezone(tzchina)
+        # print (t)
+        # print (a)
+        # r = utils.DateTimeToStr(row['dd'])
+        # print ('-------------', r)
+    
+        #---------------------------------------------------------------------------------------------
+    
+        #插入
+        # a = {
+        #     'id': 55555,
+        #     'name': 'jkhjkhh',
+        #     'price': '中文123abc'
+        # }
+        # b= ['a',1,'中']
+        # sql ="""INSERT INTO "upload"("uuid", "suffix", "uploadtime", "filepath", "fileurl", "thumbfilepath", "thumbfileurl",
+        #         "thumbsize", "filesize", "filebyte", "status", "comment", "flag", "tjb")
+        #         VALUES ($1, $2, now(), $3, $4, $5, $6, $7, $8, $9, 'nomoal', $10, $11, $12); """
+        # rv = await self.ExecSafe(sql, 'uuid118','suffix111','filepath111','fileurl111',None, None, None,
+        #                          '123', 887777,'cccccc','fffff', b)
+        # ---------------------------------------------------------------------------------------------
+    
+        #事务
+        # a = {
+        #     'id': 55555,
+        #     'name': 'jkhjkhh',
+        #     'price': '中文123abc'
+        # }
+        # b= ['a',1,'中']
+        # for i in range(3):
+        #
+        #     sql ="""INSERT INTO "upload"("uuid", "suffix", "uploadtime", "filepath", "fileurl", "thumbfilepath", "thumbfileurl",
+        #             "thumbsize", "filesize", "filebyte", "status", "comment", "flag", "tjb")
+        #             VALUES ($1, $2, now(), $3, $4, $5, $6, $7, $8, $9, 'nomoal', $10, $11, $12); """
+        #     rv = self.TransExecSafe(sql, 'uuid97722228%d'%i,'suffix111','filepath111','fileurl111',None, None, None,
+        #                              '123', 88777+i,'cccccc','fffff', b)
+        #
+        #
+        # sql = """UPDATE "upload" SET flag='77' WHERE  uuid='uuid877222281';"""
+        # self.TransExecSafe(sql)
+        #
+        # rv = await self.TransCommitSafe()
+        # ---------------------------------------------------------------------------------------------
+    
+        #redis test
+        # a = {
+        #     'id': 55555,
+        #     'name': 'jkhjkhh',
+        #     'price': '中文123abc'
+        # }
+        # b= ['a',1,'中']
+        # # await GxAsyncRedis.Set('kkk111','中文abc', 10)
+        # await GxAsyncRedis.HSet('hhh1','k1',a)
+        # await GxAsyncRedis.HSet('hhh1','k2',b, 60)
+        # # await GxAsyncRedis.Set('kkk113',b)
+        #
+        #
+        # print(1,await GxAsyncRedis.HGet('hhh1','k1'))
+        # print(2,await GxAsyncRedis.HGet('hhh1','k2'))
+        # print(2,await GxAsyncRedis.FlushAll())
+
+
+        # print(2,await GxAsyncRedis.Del('hhh1'))
+        # print(3,await GxAsyncRedis.Get('kkk112'))
+        # print('done')
+    
+        # ---------------------------------------------------------------------------------------------
+        #同步转异步测试
+        # await tornado.ioloop.IOLoop.current().run_in_executor(None, self.sync_func_test)
+        # self.sync_func_test()
+    
+        # ---------------------------------------------------------------------------------------------
+        #数据库缓存测试
+        # await GxAsyncRedis.FlushAll()
+        # fileinfo = await self.GetUploadFileInfo(uuid='7C1597D07912878D736A88B729827174-JPG')
+        # print (fileinfo)
+        #
+        #
+        #
+        # await tornado.gen.sleep(0.5)
+    
+        # ---------------------------------------------------------------------------------------------
+        # msg = {'a':1,'b':2,'c':'中文abc'}
+        # await test_mq.producer(json.dumps(msg))
+    
+        # ---------------------------------------------------------------------------------------------
+        # MySql链接测试
+        # sqlstr = """SELECT * FROM upload;"""
+        # r = await self.QuerySafe_mysql(sqlstr)
+        # for row in r:
+        #     print ('-------------------------------------------------')
+        #     print (row)
+    
+        # -----
+        # mysql时间类型测试
+    
+        # timestr = '2017-07-07 12:32:23'
+        # _intime = utils.StrToDateTime(timestr)
+        # sql ="""INSERT INTO `testtime`(`t1`, `t2`, `t3`)
+        #         VALUES (%s,%s,%s); """
+        # rv = await self.ExecSafe_mysql(sql,_intime,_intime,_intime)
+        #
+        # sql = """SELECT * FROM `testtime`;"""
+        # rv = await self.QuerySafe_mysql(sql)
+        # # print (rv, type(rv))
+        # for row in rv:
+        #     t1 = row['t1']
+        #     t2 = row['t2']
+        #     t3 = row['t3']
+        #     print (t1, utils.DateTimeToStr(t1))
+        #     print (t2, utils.DateTimeToStr(t2))
+        #     print (t3)
+
+
+        # MySql 插入
+        # a = {
+        #     'id': 55555,
+        #     'name': 'jkhjkhh',
+        #     'price': '中文123abc'
+        # }
+        # b= ['a',1,'中']
+        # sql ="""INSERT INTO `upload`(`uuid`, `suffix`, `uploadtime`, `filepath`, `fileurl`,`filesize`, `filebyte`, `status`, `comment`, `flag`)
+        #         VALUES (%s, %s, now(), %s, %s, %s, %s, 'normal', %s, %s); """
+        # rv = await self.ExecSafe_mysql(sql, 'uuidq002','suffix111','filepath111','fileurl111','中文abc', 887777,json.dumps(b,ensure_ascii=False),None)
+        #---------------------------------------------------------------------------------------------
+    
+        # Mysql事务
+        # for i in range(3):
+        #     b= ['a', i,'中']
+        #     sql ="""INSERT INTO `upload`(`uuid`, `suffix`, `uploadtime`, `filepath`, `fileurl`,`filesize`, `filebyte`, `status`, `comment`, `flag`)
+        #             VALUES (%s, %s, now(), %s, %s, %s, %s, 'normal', %s, %s); """
+        #     self.TransExecSafe_mysql(sql, 'uuid00%s'%(i+71),'suffix111','filepath111','fileurl111','123', 887777,json.dumps(b),None)
+        #
+        # sql = """UPDATE `upload` SET flag='88888888888889999999999999999999999888888888787' WHERE  uuid=%s;"""
+        # self.TransExecSafe_mysql(sql, 'uuid109')
+        #
+        # rv = await self.TransCommitSafe_mysql()
+        # print (rv)
+    
+        # ---------------------------------------------------------------------------------------------
+        #mongodb 测试
+        #查询数据
+    
+        from pymongo import InsertOne, DeleteMany, ReplaceOne, UpdateOne, DESCENDING
+        # coll = self.Mongo('jihe1')
+        # test_find_uuid = None
+        # for i in range(100):
+        #     uuid = utils.CreateGUID('KOK')
+        #     if i == 77:
+        #         test_find_uuid = uuid
+        #     rv = await coll.insert_one({
+        #         '_id': uuid,
+        #         'j' : utils.GenerateRandomIntNum(1,1000)
+        #     })
+        #     print (rv)
+        # result = await coll.bulk_write([
+        #         DeleteMany({}),  # Remove all documents from the previous example.
+        #         InsertOne({'j':1, 'k':10}),
+        #         InsertOne({'j': 2.5, 'k':1}),
+        #         InsertOne({'j': 3,'k':5}),
+        #         UpdateOne({'j': 4.5,'k':2}, {'$set': {'foo': 'bar'}}, upsert=True),
+        #         UpdateOne({'j': 6}, {'$inc': {'j': 1}}, upsert=True),
+        #         ReplaceOne({'j': 1}, {'j': 2,'a':'aa1','b':'bb1','c':'cc1'})]
+        # )
+        # rv = await coll.create_index([("j",DESCENDING)])
+        # print ('----->',rv)
+    
+        # print(result.bulk_api_result)
+        # cursor = coll.find({'_id': {'$gt': 1}},{'j':1,'_id':0}).sort('j', DESCENDING)
+        # rv = await cursor.to_list(length=100)
+        # print (rv, type(rv))
+    
+        # cursor = await coll.find_one({'_id': test_find_uuid})
+        # print (cursor)
+
+
+        #---------------------------------------------------------------------------------------------
+        # session测试
+        # opt = self.get_argument_safe('t')
+        # if opt == '0':
+        #     msid = self.mina_session.create_mina_session_id()
+        #     self.finish(msid)
+        #     return
+        # elif opt == '1':
+        #     await self.mina_session.set('testkey1','aaaaaaaaaaaaaa中文',10)
+        #     await self.mina_session.set('testkey2','bbbbbbbbbbbbbb中文',20)
+        #     # await self.visitsession.set('testkey3','ccccccccc中文',60)
+        # else:
+        #     a = await self.mina_session.get('testkey1')
+        #     b = await self.mina_session.get('testkey2')
+        #     # c = await self.visitsession.get('testkey3')
+        #     self.finish('%s---------%s'%(a,b))
+        #     return
+    
+        # ---------------------------------------------------------------------------------------------
+        # pdf转换测试
+        # htmlstr = self.render_string('trans_to_pdf_test.html')
+        # htmlstr = self.render_string('index.html')
+        # await utils.TransToPDF(htmlstr, '1.pdf')
+    
+        # ---------------------------------------------------------------------------------------------
+        # 邮件发送测试
+        #第一种原始方式通过模版生成htmlstr，这种方式适用于不在handler中的方式，可以单独在类似service的进程中调用，不用引入tornado
+        # with open('../templates/mail_tpl/test_mail_tpl.html', 'r') as fi:
+        #     mail_tpl = tornado_tmpl.Template(fi.read())
+        #     fi.close()
+        # htmlstr = mail_tpl.generate(g_admin_domain=g_admin_domain,
+        #                             short_url=short_url,
+        #                              full_name=full_name,
+        #                              year_month=year_month,
+        #                              com_name=com_name)
+    
+        #第二种方式，使用tornado 的handler直接生产htmlstr，适合在tornado web的handler中调用
+        # htmlstr = self.render_string('mail_tpl/test_mail_tpl.html',
+        #                                 g_admin_domain='www.goodluck.com',
+        #                                 short_url='ssss.com',
+        #                                 full_name='好运连连',
+        #                                 year_month='2020-12-12',
+        #                                 com_name='明明的超级大托拉斯'
+        #                                 )
+        # #具体发送
+        # subject = '收到的人超级好运，强大的测试邮件'
+        # res = await G_SCEMS.SendEmail(['8537798@qq.com', 'tobyking80@163.com'], 'service@goodluck.com', '牛牛好运平台', subject, htmlstr)
+        # print (res)
+        # res = json.loads(res)
+        # if res.get("message") and res.get("message") != "success":
+        #     return 0
+        # return 1
+    
+        # ---------------------------------------------------------------------------------------------
+        # 短信发送测试
+        # tplid = '20978'
+        # datas = {"%randcode%": '123456', "%keeptime%": g_sms_keeptime}
+        # rvjson = await G_SCSMS.SC_SendSMS('15881075900', tplid, json.dumps(datas))
+        # print (rvjson)
+        # if not rvjson or rvjson['res_code'] != 0:
+        #     self.finish(ReturnCode(900, '获取验证码失败!请稍后重试!'))
+        #     return
+
+
+        # ---------------------------------------------------------------------------------------------
+        # 百度dwz短网址接口调试
+        sw = await GDWZSDK.GetShortUrl('http://www.vastsea.com/joinus', '1-year')
+        print (sw)
+    
+        self.finish('done')
+    
+    ```
